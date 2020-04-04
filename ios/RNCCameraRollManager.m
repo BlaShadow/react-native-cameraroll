@@ -334,37 +334,23 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
                                                 : (asset.mediaType == PHAssetMediaTypeAudio
                                                   ? @"audio"
                                                   : @"unknown")));
-      CLLocation *const loc = asset.location;
+       
       NSString *const origFilename = resource.originalFilename;
+      BOOL isLocallayAvailable = [[resource valueForKey:@"locallyAvailable"] boolValue];
 
-      // A note on isStored: in the previous code that used ALAssets, isStored
-      // was always set to YES, probably because iCloud-synced images were never returned (?).
-      // To get the "isStored" information and filename, we would need to actually request the
-      // image data from the image manager. Those operations could get really expensive and
-      // would definitely utilize the disk too much.
-      // Thus, this field is actually not reliable.
-      // Note that Android also does not return the `isStored` field at all.
       [assets addObject:@{
         @"node": @{
-          @"type": assetMediaTypeLabel, // TODO: switch to mimeType?
+          @"type": assetMediaTypeLabel,
           @"group_name": currentCollectionName,
           @"image": @{
               @"uri": uri,
-              @"filename": origFilename,
+              @"filename": origFilename == nil ? uri : origFilename,
               @"height": @([asset pixelHeight]),
               @"width": @([asset pixelWidth]),
-              @"isStored": @YES, // this field doesn't seem to exist on android
-              @"playableDuration": @([asset duration]) // fractional seconds
+              @"isStored": @(isLocallayAvailable),
+              @"playableDuration": @([asset duration])
           },
-          @"timestamp": @(asset.creationDate.timeIntervalSince1970),
-          @"location": (loc ? @{
-              @"latitude": @(loc.coordinate.latitude),
-              @"longitude": @(loc.coordinate.longitude),
-              @"altitude": @(loc.altitude),
-              @"heading": @(loc.course),
-              @"speed": @(loc.speed), // speed in m/s
-            } : @{})
-          }
+        }
       }];
     };
 
@@ -428,3 +414,4 @@ static void checkPhotoLibraryConfig()
 }
 
 @end
+
