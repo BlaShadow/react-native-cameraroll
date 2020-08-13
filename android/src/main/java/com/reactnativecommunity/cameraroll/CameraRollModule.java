@@ -506,22 +506,16 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int sizeIndex = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
     int dataIndex = media.getColumnIndex(MediaStore.MediaColumns.DATA);
 
-    boolean includeLocation = include.contains(INCLUDE_LOCATION);
-    boolean includeFilename = include.contains(INCLUDE_FILENAME);
-    boolean includeFileSize = include.contains(INCLUDE_FILE_SIZE);
-    boolean includeImageSize = include.contains(INCLUDE_IMAGE_SIZE);
-    boolean includePlayableDuration = include.contains(INCLUDE_PLAYABLE_DURATION);
 
     for (int i = 0; i < limit && !media.isAfterLast(); i++) {
       WritableMap edge = new WritableNativeMap();
       WritableMap node = new WritableNativeMap();
       boolean imageInfoSuccess =
           putImageInfo(resolver, media, node, widthIndex, heightIndex, sizeIndex, dataIndex,
-              mimeTypeIndex, includeFilename, includeFileSize, includeImageSize,
-              includePlayableDuration);
+              mimeTypeIndex);
       if (imageInfoSuccess) {
         putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateTakenIndex);
-        putLocationInfo(media, node, dataIndex, includeLocation);
+        putLocationInfo(media, node, dataIndex, false);
 
         edge.putMap("node", node);
         edges.pushMap(edge);
@@ -558,11 +552,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
       int heightIndex,
       int sizeIndex,
       int dataIndex,
-      int mimeTypeIndex,
-      boolean includeFilename,
-      boolean includeFileSize,
-      boolean includeImageSize,
-      boolean includePlayableDuration) {
+      int mimeTypeIndex) {
     WritableMap image = new WritableNativeMap();
     Uri photoUri = Uri.parse("file://" + media.getString(dataIndex));
     image.putString("uri", photoUri.toString());
@@ -570,23 +560,14 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
 
     boolean isVideo = mimeType != null && mimeType.startsWith("video");
     boolean putImageSizeSuccess = putImageSize(resolver, media, image, widthIndex, heightIndex,
-        photoUri, isVideo, includeImageSize);
+        photoUri, isVideo, true);
     boolean putPlayableDurationSuccess = putPlayableDuration(resolver, image, photoUri, isVideo,
-        includePlayableDuration);
+        true);
 
-    if (includeFilename) {
       File file = new File(media.getString(dataIndex));
       String strFileName = file.getName();
       image.putString("filename", strFileName);
-    } else {
-      image.putNull("filename");
-    }
-
-    if (includeFileSize) {
       image.putDouble("fileSize", media.getLong(sizeIndex));
-    } else {
-      image.putNull("fileSize");
-    }
 
     node.putMap("image", image);
     return putImageSizeSuccess && putPlayableDurationSuccess;
