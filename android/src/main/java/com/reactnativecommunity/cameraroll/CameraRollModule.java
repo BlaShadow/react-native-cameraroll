@@ -524,7 +524,7 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
           // decrement i in order to correctly reach the limit, if the cursor has enough rows
           i--;
         }
-      } catch (Exception ex) {
+      } catch (Exception e) {
         FLog.e(ReactConstants.TAG, "Error procesing image", e);
       }
 
