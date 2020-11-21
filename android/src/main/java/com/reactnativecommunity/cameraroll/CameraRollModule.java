@@ -506,24 +506,28 @@ public class CameraRollModule extends ReactContextBaseJavaModule {
     int sizeIndex = media.getColumnIndex(MediaStore.MediaColumns.SIZE);
     int dataIndex = media.getColumnIndex(MediaStore.MediaColumns.DATA);
 
-
     for (int i = 0; i < limit && !media.isAfterLast(); i++) {
-      WritableMap edge = new WritableNativeMap();
-      WritableMap node = new WritableNativeMap();
-      boolean imageInfoSuccess =
-          putImageInfo(resolver, media, node, widthIndex, heightIndex, sizeIndex, dataIndex,
-              mimeTypeIndex);
-      if (imageInfoSuccess) {
-        putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateTakenIndex);
-        putLocationInfo(media, node, dataIndex, false);
+      try {
+        WritableMap edge = new WritableNativeMap();
+        WritableMap node = new WritableNativeMap();
+        boolean imageInfoSuccess =
+            putImageInfo(resolver, media, node, widthIndex, heightIndex, sizeIndex, dataIndex,
+                mimeTypeIndex);
+        if (imageInfoSuccess) {
+          putBasicNodeInfo(media, node, mimeTypeIndex, groupNameIndex, dateTakenIndex);
+          putLocationInfo(media, node, dataIndex, false);
 
-        edge.putMap("node", node);
-        edges.pushMap(edge);
-      } else {
-        // we skipped an image because we couldn't get its details (e.g. width/height), so we
-        // decrement i in order to correctly reach the limit, if the cursor has enough rows
-        i--;
+          edge.putMap("node", node);
+          edges.pushMap(edge);
+        } else {
+          // we skipped an image because we couldn't get its details (e.g. width/height), so we
+          // decrement i in order to correctly reach the limit, if the cursor has enough rows
+          i--;
+        }
+      } catch (Exception ex) {
+        FLog.e(ReactConstants.TAG, "Error procesing image", e);
       }
+
       media.moveToNext();
     }
     response.putArray("edges", edges);
